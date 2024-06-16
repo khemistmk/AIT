@@ -77,6 +77,10 @@ do {
                         Write-Host "[*] Downloading MAS Script" -ForegroundColor Green
                         Invoke-RestMethod https://get.activated.win | Invoke-Expression
                     }
+                    '2'{
+                        #Grabs and executes Windows 11 debloat script
+                         & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Raphire/Win11Debloat/master/Get.ps1")))
+                    }
                 }
             }
             until($WindowsTool -eq '0')
