@@ -35,10 +35,12 @@ else {
     }
 }
 
+$computername = hostname
+
 # Show menu and wait for user input, loops until valid input is provided
 function MainMenu {
         InfoHeader
-        $Toolselectionmessege = "Please select an option (1-5 or 0)" 
+        $Toolselectionmessege = "Please select an option" 
 
         Write-Output "(1) Windows 10/11 tools"
         Write-Output "(2) Windows Server tools"
@@ -46,20 +48,61 @@ function MainMenu {
         Write-Output "(4) DFIR Tools"
         Write-Output "(5) Windows Tweaks"
         Write-Output ""
-        Write-Output "(0) Quit"
+        Write-Output "(Q) Quit"
         Write-Output ""
         $Toolselectionmessege
 }
 
-function WindowsToolsMenu {
+function WinTools {
         InfoHeader
-        $WinToolselectionmessege = "Please select an option (1-5 or 0)" 
+        Write-Output "(1) Install .Net 4.0"
+        Write-Output "(2) Enable Bitlocker"
+        Write-Output "()"
+}
+
+function WindowsTweaksMenu {
+        InfoHeader 
     
         Write-Output "(1) Launch MAS Script"
         Write-Output "(2) Launch Windows 11 Debloat Script"
         Write-Output ""
-        Write-Output "(0) Quit"
-        $Wintoolselectionmessege
+        Write-Output "(0) Return to Main Menu"
+        Write-Output "(Q) Quit"
+        $Toolselectionmessege
+}
+
+#Windows Tools
+function DotNet3 {
+    #Enables .Net 3.5
+    Write-Host "[*] Enabling .Net 3.5" -ForegroundColor Green
+    DISM /Online /Enable-Feature /FeatureName:NetFx3 /All
+    Write-Host "[*] .Net 3.5 Enabled"
+}
+
+function Bitlocker {
+    #Checks if Bitlocker enabled, if not, enables and prints recovery password to file
+    if (((Get-BitLockerVolume -MountPoint c:).VolumeStatus) -eq FullyEncrypted) {
+        Write-Host "[*] Bitlocker is already enabled for Drive C:"
+    }
+    else {
+        Enable-Bitlocker -MountPoint C -UsedSpaceOnly -RecoveryPassword
+    }
+    $Bitlockerkey = (Get-BitLockerVolume -MountPoint C).KeyProtector | Where-Object -Property KeyProtectorType -eq RecoveryPassword | Select-Object -Property KeyProtectorID,RecoveryPassword 
+    $Bitlockerkey > "$HOME\$computername.txt"
+    Write-Output "Bitlocker enabled. Bitlocker key is saved to $HOME\$computername.txt"
+    Write-Output "$Bitlockerkey"
+}
+
+# Windows Tweaks
+function MASscript {
+    #Grabs and executes MAS Script
+    Write-Host "[*] Downloading MAS Script" -ForegroundColor Green
+    Invoke-RestMethod https://get.activated.win | Invoke-Expression
+}
+
+function Win11DebloatScript {
+    #Grabs and executes Windows 11 debloat script
+     & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Raphire/Win11Debloat/master/Get.ps1")))
 }
 
 do {
@@ -73,17 +116,30 @@ do {
                 $WindowsTool = Read-Host
                 switch($WindowsTool){
                     '1'{
-                        #Grabs and executes MAS Script
-                        Write-Host "[*] Downloading MAS Script" -ForegroundColor Green
-                        Invoke-RestMethod https://get.activated.win | Invoke-Expression
+                        DotNet3
                     }
                     '2'{
-                        #Grabs and executes Windows 11 debloat script
-                         & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Raphire/Win11Debloat/master/Get.ps1")))
+                        Bitlocker
+                    }
+                }
+
+            }
+        }
+        '5'{
+            clear
+            do {
+                WindowsTweaksMenu
+                $WinTweak = Read-Host
+                switch($WinTweak){
+                    '1'{
+                       MASscript
+                    }
+                    '2'{
+                       Win11DebloatScript 
                     }
                 }
             }
-            until($WindowsTool -eq '0')
+            until($WinTweak -eq 'Q')
         }
     }
     pause    
