@@ -48,16 +48,18 @@ function MainMenu {
         Write-Output "(4) DFIR Tools"
         Write-Output "(5) Windows Tweaks"
         Write-Output ""
-        Write-Output "(Q) Quit"
+        Write-Output "(q) Quit"
         Write-Output ""
         $Toolselectionmessege
 }
 
-function WinTools {
+function WinToolsMenu {
         InfoHeader
         Write-Output "(1) Install .Net 4.0"
         Write-Output "(2) Enable Bitlocker"
-        Write-Output "()"
+	Write-Output ""
+        Write-Output "(0) Return to Main Menu"
+	Write-Output "(q) Quit"
 }
 
 function WindowsTweaksMenu {
@@ -81,7 +83,7 @@ function DotNet3 {
 
 function Bitlocker {
     #Checks if Bitlocker enabled, if not, enables and prints recovery password to file
-    if (((Get-BitLockerVolume -MountPoint c:).VolumeStatus) -eq FullyEncrypted) {
+    if (((Get-BitLockerVolume -MountPoint c:).VolumeStatus) -eq 'FullyEncrypted') {
         Write-Host "[*] Bitlocker is already enabled for Drive C:"
     }
     else {
@@ -112,7 +114,7 @@ do {
         '1'{
             clear
             do {
-                WindowsToolsMenu
+                WinToolsMenu
                 $WindowsTool = Read-Host
                 switch($WindowsTool){
                     '1'{
@@ -122,8 +124,10 @@ do {
                         Bitlocker
                     }
                 }
-
+		
             }
+	        until($WindowsTool -eq 'q')
+		    MainMenu
         }
         '5'{
             clear
@@ -137,11 +141,17 @@ do {
                     '2'{
                        Win11DebloatScript 
                     }
+		    '0'{
+                        MainMenu
+                    }
                 }
             }
-            until($WinTweak -eq 'Q')
+            until($WinTweak -eq 'q')
+            
         }
     }
     pause    
     }
-until ($Tool -eq '0')
+until ($Tool -eq 'q')
+Set-Location $HOME
+exit
